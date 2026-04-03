@@ -1,0 +1,43 @@
+name: 🔨 Build MeteoMar APK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:        # permette di avviarlo manualmente
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - name: 📥 Scarica il codice
+      uses: actions/checkout@v4
+
+    - name: ☕ Configura JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: gradle
+
+    - name: 🔧 Installa Gradle 8.0
+      run: |
+        wget -q https://services.gradle.org/distributions/gradle-8.0-bin.zip -O /tmp/gradle.zip
+        unzip -q /tmp/gradle.zip -d /opt/
+        echo "/opt/gradle-8.0/bin" >> $GITHUB_PATH
+
+    - name: 📦 Genera Gradle Wrapper
+      run: gradle wrapper --gradle-version=8.0
+
+    - name: 🏗️ Compila APK Debug
+      run: |
+        chmod +x gradlew
+        ./gradlew assembleDebug --no-daemon
+
+    - name: 📤 Carica APK come Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: MeteoMar-Follonica-APK
+        path: app/build/outputs/apk/debug/app-debug.apk
+        retention-days: 30
