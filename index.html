@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>MeteoMar Follonica</title>
+<style>
+:root{--bg:#0f2027;--bg2:#203a43;--a:#4dd9ff;--card:rgba(255,255,255,0.07);--cb:rgba(255,255,255,0.11);}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{background:linear-gradient(160deg,var(--bg) 0%,var(--bg2) 60%,#2c5364 100%);background-attachment:fixed;min-height:100vh;color:#fff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;-webkit-tap-highlight-color:transparent;overflow-x:hidden;}
+/* ── NAV ── */
+.bnav{position:fixed;bottom:0;left:0;right:0;height:62px;background:rgba(10,22,28,0.97);backdrop-filter:blur(12px);display:flex;border-top:1px solid rgba(255,255,255,0.09);z-index:200;}
+.ni{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;opacity:.42;transition:opacity .2s,color .2s;font-size:.58em;padding:4px 2px;user-select:none;}
+.ni.on{opacity:1;color:var(--a);}
+.ni .ic{font-size:1.55em;margin-bottom:3px;}
+/* ── PAGES ── */
+.pg{display:none;padding:14px 14px 78px;animation:fadein .25s ease;}
+.pg.on{display:block;}
+@keyframes fadein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+/* ── HEADER ── */
+.ph{text-align:center;padding:10px 0 14px;}
+.ph h1{font-size:1.45em;font-weight:700;color:var(--a);letter-spacing:-.3px;}
+.ph .sub{font-size:.72em;opacity:.55;margin-top:3px;}
+.uprow{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:8px;}
+.upt{font-size:.68em;opacity:.5;}
+.rbtn{background:rgba(77,217,255,.12);border:1px solid rgba(77,217,255,.28);color:var(--a);border-radius:16px;padding:4px 13px;font-size:.68em;cursor:pointer;}
+/* ── CARD ── */
+.card{background:var(--card);border:1px solid var(--cb);border-radius:16px;padding:15px;margin-bottom:13px;backdrop-filter:blur(6px);}
+.clabel{font-size:.66em;text-transform:uppercase;letter-spacing:1.1px;opacity:.5;margin-bottom:11px;}
+/* ── CURRENT ── */
+.cwtop{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:13px;}
+.cwtemp{font-size:3.6em;font-weight:200;line-height:1;}
+.cwicon{font-size:3em;}
+.cwdesc{font-size:.9em;opacity:.8;margin-top:3px;}
+.cwfeel{font-size:.72em;opacity:.5;margin-top:2px;}
+/* ── GRIDS ── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;}
+.g4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;}
+.sbox{background:rgba(255,255,255,0.05);border-radius:10px;padding:9px 7px;text-align:center;}
+.sval{font-size:1.05em;font-weight:600;color:var(--a);white-space:nowrap;}
+.slbl{font-size:.62em;opacity:.55;margin-top:3px;}
+.mbox{background:rgba(77,217,255,.07);border:1px solid rgba(77,217,255,.14);border-radius:10px;padding:10px 7px;text-align:center;}
+.mval{font-size:1.1em;font-weight:600;color:var(--a);}
+.mlbl{font-size:.6em;opacity:.55;margin-top:3px;}
+/* ── FORECAST ── */
+.fscroll{display:flex;overflow-x:auto;gap:8px;padding-bottom:4px;scrollbar-width:none;}
+.fscroll::-webkit-scrollbar{display:none;}
+.fci{flex:0 0 auto;background:rgba(255,255,255,.055);border-radius:12px;padding:11px 7px;text-align:center;min-width:72px;}
+.fday{font-size:.65em;opacity:.6;}
+.ficon{font-size:1.35em;margin:5px 0;}
+.ftemp{font-size:.82em;font-weight:600;}
+.frain{font-size:.62em;color:var(--a);margin-top:3px;}
+.fwind{font-size:.62em;opacity:.55;margin-top:2px;}
+/* ── MAP ── */
+.mframe{border-radius:12px;overflow:hidden;width:100%;}
+.mframe iframe{width:100%;height:260px;border:none;display:block;}
+/* ── LINKS ── */
+.lcard{display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.09);border-radius:13px;padding:13px 14px;margin-bottom:9px;cursor:pointer;text-decoration:none;color:#fff;}
+.lcard:active{background:rgba(255,255,255,.12);}
+.ll{display:flex;align-items:center;gap:11px;}
+.lic{font-size:1.7em;}
+.lname{font-size:.88em;font-weight:600;}
+.ldesc{font-size:.67em;opacity:.55;margin-top:2px;}
+.larr{font-size:1em;opacity:.35;}
+/* ── BADGE ── */
+.badge{display:inline-flex;align-items:center;background:rgba(77,217,255,.12);border:1px solid rgba(77,217,255,.25);border-radius:20px;padding:3px 9px;font-size:.67em;color:var(--a);margin:2px;}
+/* ── LOADING / ERROR ── */
+.loading{text-align:center;padding:28px;opacity:.5;}
+.spin{width:26px;height:26px;border:2px solid rgba(255,255,255,.18);border-top-color:var(--a);border-radius:50%;animation:sp .8s linear infinite;margin:0 auto 8px;}
+@keyframes sp{to{transform:rotate(360deg)}}
+.errmsg{text-align:center;padding:18px;color:#ff8888;font-size:.82em;}
+/* ── SRC TAG ── */
+.stag{font-size:.62em;opacity:.35;text-align:center;margin-top:9px;}
+/* ── DIVIDER ── */
+.dv{height:1px;background:rgba(255,255,255,.07);margin:11px 0;}
+</style>
+</head>
+<body>
+
+<!-- PAGE: METEO -->
+<div id="pgMeteo" class="pg on">
+  <div class="ph">
+    <h1>&#127754; MeteoMar Follonica</h1>
+    <div class="sub">&#128205; Golfo di Follonica &middot; Toscana</div>
+    <div class="uprow">
+      <span class="upt" id="lastUpd">Caricamento...</span>
+      <button class="rbtn" onclick="loadAll()">&#8635; Aggiorna</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="clabel">&#127777;&#65039; Condizioni Attuali</div>
+    <div id="cw"><div class="loading"><div class="spin"></div><div>Caricamento meteo...</div></div></div>
+  </div>
+
+  <div class="card">
+    <div class="clabel">&#128168; Vento</div>
+    <div id="wd"><div class="loading"><div class="spin"></div></div></div>
+  </div>
+
+  <div class="card">
+    <div class="clabel">&#128197; Previsioni 7 Giorni</div>
+    <div id="fc7"><div class="loading"><div class="spin"></div></div></div>
+  </div>
+</div>
+
+<!-- PAGE: MARE -->
+<div id="pgMare" class="pg">
+  <div class="ph">
+    <h1>&#127754; Condizioni Marine</h1>
+    <div class="sub">&#128205; Golfo di Follonica &middot; Mar Tirreno</div>
+    <div class="uprow"><span class="upt" id="lastUpdM">&mdash;</span></div>
+  </div>
+
+  <div class="card">
+    <div class="clabel">&#127754; Stato del Mare Attuale</div>
+    <div id="mc"><div class="loading"><div class="spin"></div><div>Caricamento marine...</div></div></div>
+  </div>
+
+  <div class="card">
+    <div class="clabel">&#128197; Previsioni Mare 7 Giorni</div>
+    <div id="mfc"><div class="loading"><div class="spin"></div></div></div>
+  </div>
+
+  <div class="card">
+    <div class="clabel">&#9973;&#65039; Idoneit&agrave; alla Navigazione</div>
+    <div id="nav"><div class="loading"><div class="spin"></div></div></div>
+  </div>
+</div>
+
+<!-- PAGE: MAPPA -->
+<div id="pgMappa" class="pg">
+  <div class="ph">
+    <h1>&#128506;&#65039; Mappa Meteo</h1>
+    <div class="sub">Windy &mdash; aggiornamento continuo ECMWF</div>
+  </div>
+
+  <div class="card">
+    <div class="clabel">&#128168; Mappa Vento</div>
+    <div class="mframe">
+      <iframe id="windyWind" src="" allowfullscreen loading="lazy"></iframe>
+    </div>
+    <div class="stag">Powered by Windy.com &mdash; ECMWF</div>
+  </div>
+
+  <div class="card">
+    <div class="clabel">&#127754; Mappa Onde</div>
+    <div class="mframe">
+      <iframe id="windyWave" src="" allowfullscreen loading="lazy"></iframe>
+    </div>
+    <div class="stag">Powered by Windy.com &mdash; ECMWF</div>
+  </div>
+</div>
+
+<!-- PAGE: FONTI -->
+<div id="pgFonti" class="pg">
+  <div class="ph">
+    <h1>&#128225; Fonti Meteo</h1>
+    <div class="sub">Siti ufficiali e servizi di previsione</div>
+  </div>
+
+  <div class="card">
+    <div class="clabel">&#127988; Fonti Ufficiali Italiane</div>
+    <a class="lcard" href="https://www.meteoam.it" target="_blank">
+      <div class="ll"><div class="lic">&#9992;&#65039;</div><div><div class="lname">MeteoAM</div><div class="ldesc">Aeronautica Militare &middot; Fonte ufficiale italiana</div></div></div>
+      <div class="larr">&#8250;</div>
+    </a>
+    <a class="lcard" href="https://www.cfr.toscana.it/meteo/" target="_blank">
+      <div class="ll"><div class="lic">&#127807;</div><div><div class="lname">CFR Toscana</div><div class="ldesc">Centro Funzionale Regione Toscana</div></div></div>
+      <div class="larr">&#8250;</div>
+    </a>
+  </div>
+
+  <div class="card">
+    <div class="clabel">&#127758; Fonti Internazionali</div>
+    <a class="lcard" href="https://www.windy.com/?42.920,10.750,10" target="_blank">
+      <div class="ll"><div class="lic">&#127783;&#65039;</div><div><div class="lname">Windy</div><div class="ldesc">Mappa interattiva &middot; Modelli ECMWF / GFS</div></div></div>
+      <div class="larr">&#8250;</div>
+    </a>
+    <a class="lcard" href="https://open-meteo.com" target="_blank">
+      <div class="ll"><div class="lic">&#128202;</div><div><div class="lname">Open-Meteo</div><div class="ldesc">Dati ECMWF &middot; Gratuito &middot; Open Source</div></div></div>
+      <div class="larr">&#8250;</div>
+    </a>
+  </div>
+
+  <div class="card">
+    <div class="clabel">&#128240; Previsioni Locali</div>
+    <a class="lcard" href="https://www.3bmeteo.com/meteo/follonica" target="_blank">
+      <div class="ll"><div class="lic">&#127780;&#65039;</div><div><div class="lname">3BMeteo &mdash; Follonica</div><div class="ldesc">Previsioni dettagliate locali</div></div></div>
+      <div class="larr">&#8250;</div>
+    </a>
+    <a class="lcard" href="https://www.ilmeteo.it/meteo/Follonica" target="_blank">
+      <div class="ll"><div class="lic">&#9728;&#65039;</div><div><div class="lname">iLMeteo &mdash; Follonica</div><div class="ldesc">Previsioni orarie per Follonica</div></div></div>
+      <div class="larr">&#8250;</div>
+    </a>
+    <a class="lcard" href="https://www.meteo.it/meteo/previsioni-meteo/toscana/grosseto/follonica" target="_blank">
+      <div class="ll"><div class="lic">&#127988;</div><div><div class="lname">Meteo.it &mdash; Follonica</div><div class="ldesc">Previsioni 15 giorni</div></div></div>
+      <div class="larr">&#8250;</div>
+    </a>
+  </div>
+
+  <div class="card">
+    <div class="clabel">&#8505;&#65039; Info App</div>
+    <div style="font-size:.78em;line-height:1.65;opacity:.7;">
+      Dati temi reale da <strong>Open-Meteo</strong> (ECMWF &middot; GFS &mdash; nessuna API key).<br>
+      Mappa interattiva <strong>Windy.com</strong> (embed gratuito).<br>
+      <br>
+      <strong style="color:#4dd9ff;">&#128154; Costo di gestione: 0&euro;</strong><br>
+      Nessun backend &middot; Nessun server &middot; Aggiornamento ogni 10 min
+    </div>
+    <div style="margin-top:11px;">
+      <span class="badge">&#10003; Open-Meteo ECMWF</span>
+      <span class="badge">&#10003; Windy Maps</span>
+      <span class="badge">&#10003; 100% Gratuito</span>
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bnav">
+  <div class="ni on" onclick="showPg('Meteo')" id="niMeteo"><div class="ic">&#127777;&#65039;</div>Meteo</div>
+  <div class="ni" onclick="showPg('Mare')" id="niMare"><div class="ic">&#127754;</div>Mare</div>
+  <div class="ni" onclick="showPg('Mappa')" id="niMappa"><div class="ic">&#128506;&#65039;</div>Mappa</div>
+  <div class="ni" onclick="showPg('Fonti')" id="niFonti"><div class="ic">&#128225;</div>Fonti</div>
+</div>
+
+<script>
+// ── CONFIG ──────────────────────────────────
+var LAT = 42.92, LON = 10.75;
+var mapLoaded = false;
+
+// ── NAVIGATION ──────────────────────────────
+function showPg(n) {
+  document.querySelectorAll('.pg').forEach(function(p){p.classList.remove('on');});
+  document.querySelectorAll('.ni').forEach(function(x){x.classList.remove('on');});
+  document.getElementById('pg'+n).classList.add('on');
+  document.getElementById('ni'+n).classList.add('on');
+  if (n === 'Mappa' && !mapLoaded) {
+    var base = 'https://embed.windy.com/embed2.html?lat='+LAT+'&lon='+LON+'&detailLat='+LAT+'&detailLon='+LON+'&width=650&height=450&zoom=9&level=surface&marker=true&message=true&calendar=now&pressure=true&type=map&location=coordinates&detail=true&metricWind=km%2Fh&metricTemp=%C2%B0C&radarRange=-1';
+    document.getElementById('windyWind').src = base + '&overlay=wind&product=ecmwf';
+    document.getElementById('windyWave').src = base + '&overlay=waves&product=ecmwf';
+    mapLoaded = true;
+  }
+}
+
+// ── WMO CODES ───────────────────────────────
+var WMO = {
+  0:['&#9728;&#65039;','Sereno'],1:['&#127780;&#65039;','Poco nuvoloso'],2:['&#9925;','Parz. nuvoloso'],
+  3:['&#9729;&#65039;','Coperto'],45:['&#127787;&#65039;','Nebbia'],48:['&#127787;&#65039;','Nebbia gelata'],
+  51:['&#127754;&#65039;','Pioggerellina'],53:['&#127754;&#65039;','Pioggerellina mod'],55:['&#127754;&#65039;','Pioggerellina fitta'],
+  61:['&#127783;&#65039;','Pioggia leggera'],63:['&#127783;&#65039;','Pioggia moderata'],65:['&#127783;&#65039;','Pioggia forte'],
+  71:['&#127784;&#65039;','Neve leggera'],73:['&#10052;&#65039;','Neve'],75:['&#10052;&#65039;','Neve intensa'],
+  80:['&#127754;&#65039;','Rovesci'],81:['&#127783;&#65039;','Rovesci moderati'],82:['&#9928;&#65039;','Rovesci forti'],
+  95:['&#9928;&#65039;','Temporale'],96:['&#9928;&#65039;','Temporale c/grandine'],99:['&#9928;&#65039;','Temporale forte']
+};
+function wIcon(c){return WMO[c]?WMO[c][0]:'&#127777;&#65039;';}
+function wDesc(c){return WMO[c]?WMO[c][1]:'N/D';}
+
+// ── WIND UTILS ──────────────────────────────
+function wDir(deg){var d=['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSO','SO','OSO','O','ONO','NO','NNO'];return d[Math.round(deg/22.5)%16];}
+function bft(kmh){var t=[1,6,12,20,29,39,50,62,75,89,103,117];var b=0;for(var i=0;i<t.length;i++){if(kmh>=t[i])b=i+1;else break;}return b;}
+function bDesc(b){return['Calma','Bava','Brezza leg.','Brezza gent.','Brezza mod.','Brezza tesa','Fresco','Forte','Burrasca mod.','Burrasca','Tempesta','Fortunale','Uragano'][Math.min(b,12)];}
+function bColor(b){if(b<=3)return'#4dd9ff';if(b<=5)return'#ffd700';if(b<=7)return'#ff8c00';return'#ff4444';}
+
+// ── SEA STATE ───────────────────────────────
+function seaSt(h){
+  if(h<0.1)return['0 Glassy','#4dd9ff'];
+  if(h<0.5)return['1 Calmo','#4dd9ff'];
+  if(h<1.25)return['2 Poco mosso','#88ddff'];
+  if(h<2.5)return['3 Mosso','#ffd700'];
+  if(h<4.0)return['4 Molto mosso','#ff8c00'];
+  if(h<6.0)return['5 Agitato','#ff4444'];
+  return['6+ Molto agitato','#cc0000'];
+}
+function navAdv(h,b){
+  if(h<0.5&&b<=3)return['&#9973;&#65039; Ottime condizioni per navigare','#4dd9ff'];
+  if(h<1.25&&b<=4)return['&#9973;&#65039; Buone condizioni &mdash; navigazione OK','#88dd88'];
+  if(h<2.5&&b<=5)return['&#9888;&#65039; Condizioni moderate &mdash; cautela','#ffd700'];
+  if(h<4.0&&b<=7)return['&#9888;&#65039; Difficile &mdash; solo esperti','#ff8c00'];
+  return['&#128683; Condizioni pericolose &mdash; non navigare','#ff4444'];
+}
+
+// ── RENDER WEATHER ──────────────────────────
+function renderCW(c){
+  var b=bft(c.wind_speed_10m);
+  document.getElementById('cw').innerHTML=
+    '<div class="cwtop"><div>'+
+    '<div class="cwtemp">'+Math.round(c.temperature_2m)+'&deg;</div>'+
+    '<div class="cwdesc">'+wIcon(c.weather_code)+' '+wDesc(c.weather_code)+'</div>'+
+    '<div class="cwfeel">Percepita '+Math.round(c.apparent_temperature)+'&deg;C</div>'+
+    '</div><div class="cwicon">'+wIcon(c.weather_code)+'</div></div>'+
+    '<div class="g4">'+
+    '<div class="sbox"><div class="sval">&#128167; '+c.relative_humidity_2m+'%</div><div class="slbl">Umidit&agrave;</div></div>'+
+    '<div class="sbox"><div class="sval">&#127777;&#65039; '+Math.round(c.pressure_msl)+'</div><div class="slbl">hPa</div></div>'+
+    '<div class="sbox"><div class="sval">&#127783;&#65039; '+c.precipitation+'mm</div><div class="slbl">Pioggia</div></div>'+
+    '<div class="sbox"><div class="sval">&#128065;&#65039; '+(c.visibility>=1000?Math.round(c.visibility/1000)+'km':c.visibility+'m')+'</div><div class="slbl">Visib.</div></div>'+
+    '</div><div class="stag">Fonte: Open-Meteo &mdash; ECMWF/GFS</div>';
+
+  document.getElementById('wd').innerHTML=
+    '<div style="text-align:center;margin-bottom:12px;">'+
+    '<div style="font-size:2em;">&#128168;</div>'+
+    '<div style="font-size:2.1em;font-weight:600;color:'+bColor(b)+'">'+Math.round(c.wind_speed_10m)+' km/h</div>'+
+    '<div style="font-size:.88em;opacity:.7;">da '+wDir(c.wind_direction_10m)+' &middot; '+b+' Bft &middot; '+bDesc(b)+'</div>'+
+    '</div>'+
+    '<div class="g2">'+
+    '<div class="sbox"><div class="sval" style="color:'+bColor(b)+'">'+Math.round(c.wind_gusts_10m)+' km/h</div><div class="slbl">Raffiche</div></div>'+
+    '<div class="sbox"><div class="sval">'+wDir(c.wind_direction_10m)+'</div><div class="slbl">Direzione ('+Math.round(c.wind_direction_10m)+'&deg;)</div></div>'+
+    '</div>';
+}
+
+// ── RENDER FORECAST ─────────────────────────
+function renderFC(daily){
+  var days=['Dom','Lun','Mar','Mer','Gio','Ven','Sab'];
+  var h='<div class="fscroll">';
+  for(var i=0;i<daily.time.length;i++){
+    var d=new Date(daily.time[i]+'T12:00:00');
+    var lbl=i===0?'Oggi':days[d.getDay()];
+    h+='<div class="fci">'+
+      '<div class="fday">'+lbl+'</div>'+
+      '<div class="ficon">'+wIcon(daily.weather_code[i])+'</div>'+
+      '<div class="ftemp">'+Math.round(daily.temperature_2m_max[i])+'&deg;/'+Math.round(daily.temperature_2m_min[i])+'&deg;</div>'+
+      '<div class="frain">&#127783;&#65039; '+daily.precipitation_sum[i]+'mm</div>'+
+      '<div class="fwind">&#128168; '+Math.round(daily.wind_speed_10m_max[i])+'km/h</div>'+
+      '</div>';
+  }
+  h+='</div>';
+  document.getElementById('fc7').innerHTML=h;
+}
+
+// ── RENDER MARINE ────────────────────────────
+var savedWH=0,savedBft=0;
+function renderMarine(m,md){
+  var wh=m.wave_height||0;
+  savedWH=wh;
+  var ss=seaSt(wh);
+  document.getElementById('mc').innerHTML=
+    '<div style="text-align:center;margin-bottom:13px;">'+
+    '<div style="font-size:2.4em;font-weight:600;color:'+ss[1]+'">'+wh.toFixed(1)+' m</div>'+
+    '<div style="font-size:.95em;opacity:.8;margin-top:4px;">'+ss[0]+'</div>'+
+    '</div>'+
+    '<div class="g3">'+
+    '<div class="mbox"><div class="mval">'+(m.wave_height?m.wave_height.toFixed(1)+'m':'N/D')+'</div><div class="mlbl">Onde</div></div>'+
+    '<div class="mbox"><div class="mval">'+(m.wave_period?m.wave_period.toFixed(1)+'s':'N/D')+'</div><div class="mlbl">Periodo</div></div>'+
+    '<div class="mbox"><div class="mval">'+(m.wave_direction?wDir(m.wave_direction):'N/D')+'</div><div class="mlbl">Direzione</div></div>'+
+    '<div class="mbox"><div class="mval">'+(m.swell_wave_height?m.swell_wave_height.toFixed(1)+'m':'N/D')+'</div><div class="mlbl">Swell</div></div>'+
+    '<div class="mbox"><div class="mval">'+(m.swell_wave_period?m.swell_wave_period.toFixed(1)+'s':'N/D')+'</div><div class="mlbl">Per.Swell</div></div>'+
+    '<div class="mbox"><div class="mval">'+(m.wind_wave_height?m.wind_wave_height.toFixed(1)+'m':'N/D')+'</div><div class="mlbl">OndaVento</div></div>'+
+    '</div><div class="stag">Fonte: Open-Meteo Marine API &mdash; ECMWF</div>';
+
+  if(md&&md.time){
+    var days=['Dom','Lun','Mar','Mer','Gio','Ven','Sab'];
+    var h='<div class="fscroll">';
+    for(var i=0;i<md.time.length;i++){
+      var dd=new Date(md.time[i]+'T12:00:00');
+      var lbl=i===0?'Oggi':days[dd.getDay()];
+      var maxH=md.wave_height_max[i]||0;
+      var sc=seaSt(maxH);
+      h+='<div class="fci">'+
+        '<div class="fday">'+lbl+'</div>'+
+        '<div class="ficon" style="font-size:1.2em">&#127754;</div>'+
+        '<div class="ftemp" style="color:'+sc[1]+'">'+maxH.toFixed(1)+'m</div>'+
+        '<div class="frain">'+sc[0].split(' ')[0]+'</div>'+
+        '<div class="fwind">'+(md.wave_period_max&&md.wave_period_max[i]?md.wave_period_max[i].toFixed(0)+'s':'-')+'</div>'+
+        '</div>';
+    }
+    h+='</div>';
+    document.getElementById('mfc').innerHTML=h;
+  }
+  renderNav();
+}
+
+function renderNav(){
+  var adv=navAdv(savedWH,savedBft);
+  document.getElementById('nav').innerHTML=
+    '<div style="text-align:center;padding:10px 0;">'+
+    '<div style="font-size:1.05em;font-weight:600;color:'+adv[1]+'">'+adv[0]+'</div>'+
+    '<div style="font-size:.72em;opacity:.55;margin-top:8px;">Onde: '+savedWH.toFixed(1)+'m &middot; Vento: '+savedBft+' Bft</div>'+
+    '<div style="font-size:.67em;opacity:.38;margin-top:6px;">&#9888;&#65039; Verificare sempre con le autorit&agrave; marittime</div>'+
+    '</div>';
+}
+
+// ── FETCH ────────────────────────────────────
+async function loadWeather(){
+  var url='https://api.open-meteo.com/v1/forecast?latitude='+LAT+'&longitude='+LON+
+    '&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,pressure_msl,visibility'+
+    '&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,wind_speed_10m_max,wind_direction_10m_dominant'+
+    '&wind_speed_unit=kmh&timezone=Europe%2FRome&forecast_days=7';
+  var r=await fetch(url);
+  if(!r.ok)throw new Error('HTTP '+r.status);
+  var d=await r.json();
+  savedBft=bft(d.current.wind_speed_10m);
+  renderCW(d.current);
+  renderFC(d.daily);
+}
+
+async function loadMarine(){
+  var url='https://marine-api.open-meteo.com/v1/marine?latitude='+LAT+'&longitude='+LON+
+    '&current=wave_height,wave_direction,wave_period,wind_wave_height,wind_wave_direction,swell_wave_height,swell_wave_direction,swell_wave_period'+
+    '&daily=wave_height_max,wave_period_max&timezone=Europe%2FRome&forecast_days=7';
+  var r=await fetch(url);
+  if(!r.ok)throw new Error('HTTP '+r.status);
+  var d=await r.json();
+  renderMarine(d.current,d.daily);
+}
+
+async function loadAll(){
+  var el=document.getElementById('lastUpd');
+  var elM=document.getElementById('lastUpdM');
+  el.textContent='Aggiornamento...';
+  try{
+    await Promise.all([loadWeather(),loadMarine()]);
+    var t=new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+    el.textContent='Aggiornato alle '+t;
+    if(elM)elM.textContent='Aggiornato alle '+t;
+  }catch(e){
+    el.textContent='&#9888;&#65039; Errore connessione';
+    document.getElementById('cw').innerHTML='<div class="errmsg">&#9888;&#65039; Impossibile caricare i dati.<br>Verifica la connessione internet.</div>';
+    console.error(e);
+  }
+}
+
+// ── START ────────────────────────────────────
+loadAll();
+setInterval(loadAll, 10*60*1000);
+</script>
+</body>
+</html>

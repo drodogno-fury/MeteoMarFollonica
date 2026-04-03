@@ -1,0 +1,13 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <style name="Theme.MeteoMarFollonica" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">#0f2027</item>
+        <item name="colorPrimaryVariant">#203a43</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorSecondary">#4dd9ff</item>
+        <item name="colorSecondaryVariant">#0088aa</item>
+        <item name="colorOnSecondary">@color/black</item>
+        <item name="android:statusBarColor" tools:targetApi="l">#0f2027</item>
+        <item name="android:navigationBarColor">#0f2027</item>
+        <item name="android:windowBackground">#0f2027</item>
+    </style>
+</resources>
